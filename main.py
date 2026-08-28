@@ -107,3 +107,16 @@ try:
 except Exception as e:
     print("10. Wrong format: REJECTED")
     print("ERROR: ", e)
+
+
+from preprocessing.text_preprocessor import preprocess_text
+
+text = "I am REALLY stressed!!! I've been working continuously for 3 days."
+
+processed = preprocess_text(text)
+
+print("Original:")
+print(text)
+
+print("\nProcessed:")
+print(processed)
