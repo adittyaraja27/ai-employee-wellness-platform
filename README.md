@@ -10,15 +10,15 @@ This aims to process this text and provide meaningful insights using Natural Lan
 The current pipeline is:
 
 Employee
-     ↓
+     ->
 Text Ingestion
-     ↓
+     ->
 Input Validation
-     ↓
+     ->
 Text Preprocessing
-     ↓
+     ->
 VADER Sentiment Analysis
-     ↓
+     ->
 Sentiment Classification
-     ↓
+     ->
 Sentiment Report
