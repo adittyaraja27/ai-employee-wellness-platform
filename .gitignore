@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .DS_Store
 
+.venv-m2/
+
+# Model checkpoints
+models/bert/
+models/distilbert/
