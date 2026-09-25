@@ -1,6 +1,8 @@
 
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from emotion.intensity import calculate_intensity
+from emotion.emotional_state import analyze_emotional_state
 
 from ingestion.text_ingestion import validate_text
 from preprocessing.text_preprocessor import preprocess_text
@@ -64,12 +66,23 @@ class MoodMentorPipeline:
         # Transformer uses preprocessed M1 text
         emotion_result = self.analyze_emotion(preprocessed_text)
 
+        intensity_result = calculate_intensity(
+            emotion_result["emotions"]
+        )
+
+        emotional_state_result = analyze_emotional_state(
+            emotion_result["emotions"],
+            intensity_result
+        )
+
         return {
             "text": text,
             "preprocessed_text": preprocessed_text,
             "sentiment": sentiment_result,
-            "emotions": emotion_result
-        }
+            "emotions": emotion_result,
+            "intensity": intensity_result,
+            "emotional_state": emotional_state_result
+}
 
 
 def analyze_text(text):
@@ -82,9 +95,9 @@ if __name__ == "__main__":
     pipeline = MoodMentorPipeline()
 
     sample_text = (
-        "I am excited about my promotion, "
-        "but I am also nervous about the new responsibilities."
-    )
+    "I'm excited about getting promoted, "
+    "but I'm nervous about the extra responsibility."
+)
 
     result = pipeline.analyze(sample_text)
 
