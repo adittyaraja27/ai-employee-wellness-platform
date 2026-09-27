@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Activity History - Mood Mentor</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header class="navbar">
+
+        <div class="navbar-brand">
+
+            <p class="subtitle">
+                AI Employee Wellness Platform
+            </p>
+
+            <h1>Mood Mentor</h1>
+
+        </div>
+
+        <a href="{{ url_for('dashboard') }}" class="history-button">
+            Back to Dashboard
+        </a>
+
+    </header>
+
+
+    <main>
+
+        <section class="results">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="muted">Your activity</p>
+                    <h2>Analysis History</h2>
+                </div>
+
+                <span class="badge">
+                    {{ records|length }} Analyses
+                </span>
+
+            </div>
+
+
+            {% if records %}
+
+                <div class="history-list">
+
+                    {% for record in records|reverse %}
+
+                        <div class="history-card">
+
+                            <div class="history-header">
+
+                                <div>
+                                    <h3>
+                                        {{ record.emotional_state.emotional_state }}
+                                    </h3>
+
+                                    <p class="muted">
+                                        {{ record.timestamp | replace("T", " ") }}
+                                    </p>
+                                </div>
+
+                                <span class="history-emotion">
+                                    {{ record.emotional_state.dominant_emotion }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="history-details">
+
+                                <div>
+                                    <span class="muted">
+                                        Intensity
+                                    </span>
+
+                                    <strong>
+                                        {{ "%.1f"|format(record.intensity.intensity * 100) }}%
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span class="muted">
+                                        Severity
+                                    </span>
+
+                                    <strong>
+                                        {{ record.intensity.severity }}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <h3>No activity yet</h3>
+
+                    <p>
+                        Analyze your mood from the dashboard
+                        and your activity will appear here.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

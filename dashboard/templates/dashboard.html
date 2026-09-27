@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mood Mentor</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header class="navbar">
+
+    <div class="navbar-brand">
+
+        <p class="subtitle">
+            AI Employee Wellness Platform
+        </p>
+
+        <h1>Mood Mentor</h1>
+
+    </div>
+
+    <a href="{{ url_for('activity_history') }}" class="history-button">
+        Activity History
+    </a>
+
+</header>
+
+
+        <main>
+
+            <!-- Input Section -->
+            <section class="input-card">
+
+                <h2>How are you feeling today?</h2>
+
+                <p class="muted">
+                    Write what's on your mind or upload your wellness data.
+                </p>
+
+                <form method="POST">
+
+    <textarea
+        name="mood_text"
+        placeholder="Tell Mood Mentor what's on your mind..."
+        required
+    >{{ text }}</textarea>
+
+    <button type="submit">
+        Analyze My Mood
+    </button>
+
+</form>
+
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+
+                <!-- File Upload -->
+
+                <div class="upload-area">
+
+                    <p class="upload-title">
+                        Upload your data
+                    </p>
+
+                    <p class="muted">
+                        Supported formats: CSV and TXT
+                    </p>
+
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept=".csv,.txt"
+                    >
+
+                </div>
+
+            </section>
+
+
+            <!-- Analysis Section -->
+
+            <section class="results">
+
+                <h2>Your Emotional Analysis</h2>
+
+                <div class="result-grid">
+
+                    <div class="result-card">
+                        <span>Current State</span>
+                        <strong>
+    {% if result %}
+        {{ result.emotional_state.emotional_state }}
+    {% else %}
+        Not analyzed
+    {% endif %}
+</strong>
+                    </div>
+
+                    <div class="result-card">
+                        <span>Dominant Emotion</span>
+                        <strong>
+    {% if result %}
+        {{ result.emotions.primary_emotion }}
+    {% else %}
+        —
+    {% endif %}
+</strong>
+                    </div>
+
+                    <div class="result-card">
+    <span>Intensity</span>
+
+    <strong>
+        {% if result %}
+            {{ "%.1f"|format(result.intensity.intensity * 100) }}%
+        {% else %}
+            —
+        {% endif %}
+    </strong>
+</div>
+
+                    <div class="result-card">
+                        <span>Sentiment</span>
+                        <strong>
+    {% if result %}
+        {{ result.sentiment.sentiment }}
+    {% else %}
+        —
+    {% endif %}
+</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- Recommendation Section -->
+
+            <section class="recommendations">
+
+                <div class="section-heading">
+
+                    <div>
+                        <p class="muted">For you</p>
+                        <h2>Personalized Recommendations</h2>
+                    </div>
+
+                    <span class="badge">
+                        AI Powered
+                    </span>
+
+                </div>
+
+
+                <div id="recommendationContainer">
+
+    {% if recommendations %}
+
+        {% for item in recommendations %}
+
+            <div class="empty-state">
+
+                <h3>{{ item.content.title }}</h3>
+
+                <p>
+                    {{ item.content.description }}
+                </p>
+
+                <p class="muted">
+                    Recommendation score: {{ item.score }}
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <h3>No recommendations yet</h3>
+
+            <p>
+                Analyze your mood first and Mood Mentor
+                will generate personalized wellness
+                recommendations.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>
