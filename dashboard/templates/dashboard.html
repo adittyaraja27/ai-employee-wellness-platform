@@ -143,7 +143,56 @@
 </strong>
                     </div>
 
+                                </div>
+
+                {% if user_state %}
+                <div class="trend-card">
+
+                    <div class="trend-header">
+                        <div>
+                            <span class="trend-label">Historical Emotional State</span>
+                            <h3>Your Emotional Trend</h3>
+                        </div>
+
+                        <span class="trend-badge">
+                            Based on {{ trend_result.total_analyses }} analyses
+                        </span>
+                    </div>
+
+                    <div class="trend-details">
+
+                        <div class="trend-item">
+                            <span class="trend-label">Dominant Emotion</span>
+                            <strong>
+                                {{ user_state.dominant_emotion }}
+                            </strong>
+                        </div>
+
+                        <div class="trend-item">
+                            <span class="trend-label">Trend</span>
+                            <strong>
+                                {{ user_state.trend }}
+                            </strong>
+                        </div>
+
+                        <div class="trend-item">
+                            <span class="trend-label">Average Intensity</span>
+                            <strong>
+                                {{ "%.1f"|format(user_state.average_intensity * 100) }}%
+                            </strong>
+                        </div>
+
+                        <div class="trend-item">
+                            <span class="trend-label">Overall State</span>
+                            <strong>
+                                {{ user_state.state }}
+                            </strong>
+                        </div>
+
+                    </div>
+
                 </div>
+                {% endif %}
 
             </section>
 

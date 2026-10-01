@@ -72,7 +72,8 @@ class MoodMentorPipeline:
 
         emotional_state_result = analyze_emotional_state(
             emotion_result["emotions"],
-            intensity_result
+            intensity_result,
+            sentiment_result
         )
 
         return {

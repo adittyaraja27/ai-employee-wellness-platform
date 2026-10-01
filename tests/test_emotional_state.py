@@ -15,9 +15,14 @@ def test_emotional_state():
 
     intensity_result = calculate_intensity(emotion_scores)
 
+    sentiment_result = {
+        "sentiment": "Positive"
+    }
+
     result = analyze_emotional_state(
         emotion_scores,
-        intensity_result
+        intensity_result,
+        sentiment_result
     )
 
     print("\nEmotional State Test")

@@ -1,9 +1,18 @@
 from emotion.labels import EMOTION_LABELS
 
 
-def analyze_emotional_state(emotion_scores, intensity_result):
+def analyze_emotional_state(
+    emotion_scores,
+    intensity_result,
+    sentiment_result
+):
     """
     Analyze the user's overall emotional state.
+
+    Surprise is treated as context-dependent:
+        Surprise + Joy      -> Positive
+        Surprise + Negative -> Negative
+        Surprise alone      -> Ambiguous
 
     Parameters:
         emotion_scores (dict):
@@ -24,23 +33,44 @@ def analyze_emotional_state(emotion_scores, intensity_result):
     intensity = intensity_result["intensity"]
     severity = intensity_result["severity"]
 
-    # Emotions that are strong enough to be considered present
+    # ---------------------------------------------------------
+    # 1. Detect emotions that are strong enough to be present
+    # ---------------------------------------------------------
+
     detected_emotions = {
         emotion: score
         for emotion, score in emotion_scores.items()
         if score >= 0.50
     }
 
-    # Remove dominant emotion to identify secondary emotions
+    # ---------------------------------------------------------
+    # 2. Identify secondary emotions
+    # ---------------------------------------------------------
+
     secondary_emotions = {
         emotion: score
         for emotion, score in detected_emotions.items()
         if emotion != dominant_emotion
     }
 
-    # Positive and negative emotion groups
-    positive_emotions = {"joy", "surprise"}
-    negative_emotions = {"sadness", "anger", "fear", "disgust"}
+    # ---------------------------------------------------------
+    # 3. Define emotional groups
+    # ---------------------------------------------------------
+
+    positive_emotions = {"joy"}
+
+    negative_emotions = {
+        "sadness",
+        "anger",
+        "fear",
+        "disgust"
+    }
+
+    surprise_emotion = "surprise"
+
+    # ---------------------------------------------------------
+    # 4. Calculate strongest positive / negative evidence
+    # ---------------------------------------------------------
 
     positive_score = max(
         [emotion_scores[e] for e in positive_emotions],
@@ -52,27 +82,79 @@ def analyze_emotional_state(emotion_scores, intensity_result):
         default=0
     )
 
-    # Determine emotional polarity
-    if positive_score >= 0.50 and negative_score >= 0.50:
+    surprise_score = emotion_scores.get(
+        surprise_emotion,
+        0
+    )
+
+    # ---------------------------------------------------------
+    # 5. Determine emotional polarity
+    # ---------------------------------------------------------
+
+    positive_present = positive_score >= 0.50
+    negative_present = negative_score >= 0.50
+    surprise_present = surprise_score >= 0.50
+
+    # Both positive and negative emotions are strong.
+    # Surprise does not change this.
+    if positive_present and negative_present:
         polarity = "Mixed"
-    elif positive_score >= 0.50:
+
+    # Positive emotion, optionally accompanied by surprise.
+    elif positive_present:
         polarity = "Positive"
-    elif negative_score >= 0.50:
+
+    # Negative emotion, optionally accompanied by surprise.
+    elif negative_present:
         polarity = "Negative"
+
+    # Surprise without a positive or negative emotion.
+    elif surprise_present:
+        sentiment = sentiment_result.get("sentiment", "").lower()
+
+        if sentiment == "positive":
+            polarity = "Positive"
+        elif sentiment == "negative":
+            polarity = "Negative"
+        else:
+            polarity = "Ambiguous"
     else:
         polarity = "Neutral"
 
-    # Mixed emotional state means multiple strong emotions
-    is_mixed = len(detected_emotions) > 1
+    # ---------------------------------------------------------
+    # 6. Determine whether the emotional state is mixed
+    # ---------------------------------------------------------
 
-    if is_mixed:
-        emotional_state = "Mixed emotional state"
-    elif polarity == "Positive":
+    # Surprise + Joy is NOT mixed.
+    # Surprise + Fear is NOT mixed.
+    # Mixed means genuine positive + negative emotion together.
+    is_mixed = (
+        positive_present
+        and negative_present
+    )
+
+    # ---------------------------------------------------------
+    # 7. Generate human-readable emotional state
+    # ---------------------------------------------------------
+
+    if polarity == "Positive":
         emotional_state = "Positive emotional state"
+
     elif polarity == "Negative":
         emotional_state = "Negative emotional state"
+
+    elif polarity == "Mixed":
+        emotional_state = "Mixed emotional state"
+
+    elif polarity == "Ambiguous":
+        emotional_state = "Ambiguous emotional state"
+
     else:
         emotional_state = "Neutral emotional state"
+
+    # ---------------------------------------------------------
+    # 8. Return complete result
+    # ---------------------------------------------------------
 
     return {
         "dominant_emotion": dominant_emotion,

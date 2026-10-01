@@ -301,3 +301,81 @@ input[type="file"] {
         padding: 30px 16px;
     }
 }
+
+
+/* Emotional Trend */
+
+.trend-card {
+    margin-top: 24px;
+    padding: 28px;
+    background: #151B23;
+    border: 1px solid #273244;
+    border-radius: 16px;
+}
+
+.trend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.trend-header h3 {
+    margin: 6px 0 0;
+    color: #F1F5F9;
+    font-size: 24px;
+}
+
+.trend-label {
+    display: block;
+    color: #94A3B8;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.trend-badge {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #11161D;
+    border: 1px solid #273244;
+    color: #60A5FA;
+    font-size: 13px;
+}
+
+.trend-details {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.trend-item {
+    background: #11161D;
+    border: 1px solid #273244;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.trend-item strong {
+    display: block;
+    color: #F1F5F9;
+    font-size: 18px;
+    text-transform: capitalize;
+}
+
+@media (max-width: 800px) {
+    .trend-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .trend-details {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 500px) {
+    .trend-details {
+        grid-template-columns: 1fr;
+    }
+}
