@@ -215,13 +215,13 @@
                 </div>
 
 
-                <div id="recommendationContainer">
+<div id="recommendationContainer">
 
     {% if recommendations %}
 
         {% for item in recommendations %}
 
-            <div class="empty-state">
+            <div class="recommendation-card">
 
                 <h3>{{ item.content.title }}</h3>
 
@@ -232,6 +232,106 @@
                 <p class="muted">
                     Recommendation score: {{ item.score }}
                 </p>
+
+                <div class="feedback-section">
+
+                    <span class="feedback-label">
+                        Was this recommendation helpful?
+                    </span>
+
+                    <div class="feedback-buttons">
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('recommendation_feedback') }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="recommendation_id"
+                                value="{{ item.content.id }}"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="feedback_type"
+                                value="accepted"
+                            >
+
+                            <button
+                                type="submit"
+                                class="feedback-btn"
+                            >
+                                ✓ Helpful
+                            </button>
+                        </form>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('recommendation_feedback') }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="recommendation_id"
+                                value="{{ item.content.id }}"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="feedback_type"
+                                value="rejected"
+                            >
+
+                            <button
+                                type="submit"
+                                class="feedback-btn"
+                            >
+                                ✕ Not Helpful
+                            </button>
+                        </form>
+
+                    </div>
+
+                    <div class="rating-section">
+
+                        <span class="feedback-label">
+                            Rate this recommendation
+                        </span>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('recommendation_feedback') }}"
+                            class="rating-form"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="recommendation_id"
+                                value="{{ item.content.id }}"
+                            >
+
+                            <select name="rating" required>
+                                <option value="">
+                                    Select rating
+                                </option>
+                                <option value="1">1 ★</option>
+                                <option value="2">2 ★</option>
+                                <option value="3">3 ★</option>
+                                <option value="4">4 ★</option>
+                                <option value="5">5 ★</option>
+                            </select>
+
+                            <button
+                                type="submit"
+                                class="feedback-btn"
+                            >
+                                Submit Rating
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
 
             </div>
 
@@ -254,7 +354,6 @@
     {% endif %}
 
 </div>
-
             </section>
 
         </main>

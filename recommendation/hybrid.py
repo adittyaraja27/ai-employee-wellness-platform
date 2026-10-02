@@ -1,14 +1,17 @@
 from recommendation.content import WELLNESS_CONTENT
 from recommendation.semantic_matcher import SemanticMatcher
+from recommendation.feedback import RecommendationFeedback
 
 
 SEMANTIC_WEIGHT = 3
+FEEDBACK_WEIGHT = 1
 
 
 class HybridRecommendationEngine:
 
-    def __init__(self):
+    def __init__(self, history=None):
         self.semantic_matcher = SemanticMatcher()
+        self.feedback = RecommendationFeedback(history)
 
     def calculate_score(
         self,
@@ -16,7 +19,8 @@ class HybridRecommendationEngine:
         primary_emotion,
         intensity,
         user_preferences,
-        semantic_similarity
+        semantic_similarity,
+        feedback_score
     ):
         emotion_score = 0
         intensity_score = 0
@@ -40,19 +44,21 @@ class HybridRecommendationEngine:
 
         # 5. Semantic relevance
         semantic_score = semantic_similarity * SEMANTIC_WEIGHT
-
+        feedback_adjustment = feedback_score * FEEDBACK_WEIGHT
         final_score = (
             emotion_score
             + intensity_score
             + preference_score
             + semantic_score
-        )
+            + feedback_adjustment
+)
 
         return {
             "emotion_score": emotion_score,
             "intensity_score": intensity_score,
             "preference_score": preference_score,
             "semantic_score": semantic_score,
+            "feedback_score": feedback_adjustment,
             "final_score": final_score
         }
 
@@ -84,13 +90,16 @@ class HybridRecommendationEngine:
 
             content = item["content"]
             similarity = item["similarity"]
-
+            feedback_score = self.feedback.calculate_feedback_score(
+                content["id"]
+            )
             score_breakdown = self.calculate_score(
                 content,
                 primary_emotion,
                 intensity,
                 user_preferences,
-                similarity
+                similarity,
+                feedback_score
             )
 
             if score_breakdown["final_score"] > 0:

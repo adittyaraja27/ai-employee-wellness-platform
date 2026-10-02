@@ -1,6 +1,6 @@
 import traceback
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 
 from integration.mood_mentor_pipeline import MoodMentorPipeline
 from user.history import UserHistory
@@ -17,10 +17,9 @@ app = Flask(
     static_url_path="/static"
 )
 
-
 pipeline = MoodMentorPipeline()
 history = UserHistory()
-recommendation_engine = HybridRecommendationEngine()
+recommendation_engine = HybridRecommendationEngine(history)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -101,9 +100,128 @@ def activity_history():
         records=records
     )
 
+@app.route("/feedback", methods=["POST"])
+def recommendation_feedback():
+
+    recommendation_id = request.form.get("recommendation_id")
+    feedback_type = request.form.get("feedback_type")
+    rating = request.form.get("rating")
+
+    if not recommendation_id:
+        return redirect(url_for("dashboard"))
+
+    accepted = feedback_type == "accepted"
+    rejected = feedback_type == "rejected"
+
+    rating_value = None
+
+    if rating:
+        try:
+            rating_value = int(rating)
+        except ValueError:
+            rating_value = None
+
+    recommendation_engine.feedback.record_feedback(
+        recommendation_id=recommendation_id,
+        viewed=True,
+        accepted=accepted,
+        rejected=rejected,
+        rating=rating_value
+    )
+
+    print("\n=== FEEDBACK DEBUG ===")
+    print(
+        recommendation_engine.feedback.get_recommendation_feedback(
+            recommendation_id
+        )
+    )
+    print(
+        "Acceptance rate:",
+        recommendation_engine.feedback.calculate_acceptance_rate(
+            recommendation_id
+        )
+    )
+    print(
+        "Average rating:",
+        recommendation_engine.feedback.calculate_average_rating(
+            recommendation_id
+        )
+    )
+    print(
+        "Feedback score:",
+        recommendation_engine.feedback.calculate_feedback_score(
+            recommendation_id
+        )
+    )
+    print("======================\n")
+
+    return redirect(url_for("dashboard"))
+
 
 if __name__ == "__main__":
     app.run(
         debug=True,
         port=5001
     )
+
+if __name__ == "__main__":
+    app.run(
+        debug=True,
+        port=5001
+    )
+
+@app.route("/feedback", methods=["POST"])
+def recommendation_feedback():
+
+    recommendation_id = request.form.get("recommendation_id")
+    feedback_type = request.form.get("feedback_type")
+    rating = request.form.get("rating")
+
+    if not recommendation_id:
+        return redirect(url_for("dashboard"))
+
+    accepted = feedback_type == "accepted"
+    rejected = feedback_type == "rejected"
+
+    rating_value = None
+
+    if rating:
+        try:
+            rating_value = int(rating)
+        except ValueError:
+            rating_value = None
+
+    recommendation_engine.feedback.record_feedback(
+        recommendation_id=recommendation_id,
+        viewed=True,
+        accepted=accepted,
+        rejected=rejected,
+        rating=rating_value
+    )
+    print("\n=== FEEDBACK DEBUG ===")
+    print(
+        recommendation_engine.feedback.get_recommendation_feedback(
+            recommendation_id
+        )
+    )
+    print(
+        "Acceptance rate:",
+        recommendation_engine.feedback.calculate_acceptance_rate(
+            recommendation_id
+        )
+    )
+    print(
+        "Average rating:",
+        recommendation_engine.feedback.calculate_average_rating(
+            recommendation_id
+        )
+    )
+    print(
+        "Feedback score:",
+        recommendation_engine.feedback.calculate_feedback_score(
+            recommendation_id
+        )
+    )
+    print("======================\n")
+    
+    return redirect(url_for("dashboard"))

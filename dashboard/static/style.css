@@ -379,3 +379,71 @@ input[type="file"] {
         grid-template-columns: 1fr;
     }
 }
+
+.recommendation-card {
+    background: #11161D;
+    border: 1px solid #273244;
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 12px;
+}
+
+.recommendation-card h3 {
+    margin: 0 0 8px;
+    color: #F1F5F9;
+    font-size: 18px;
+}
+
+.recommendation-card p {
+    margin: 6px 0;
+}
+
+.feedback-section {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #273244;
+}
+
+.feedback-label {
+    display: block;
+    color: #94A3B8;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.feedback-btn {
+    padding: 9px 15px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #151B23;
+    color: #CBD5E1;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.feedback-btn:hover {
+    border-color: #60A5FA;
+}
+
+.rating-section {
+    margin-top: 16px;
+}
+
+.rating-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.rating-form select {
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #151B23;
+    color: #CBD5E1;
+}
