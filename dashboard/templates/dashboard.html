@@ -233,18 +233,43 @@
                     Recommendation score: {{ item.score }}
                 </p>
 
+                {% if item.explanation %}
+
+                    <details class="recommendation-why">
+
+                        <summary>Why?</summary>
+
+                        <div class="recommendation-explanation">
+
+                            <ul>
+                                {% for reason in item.explanation %}
+                                    <li>{{ reason }}</li>
+                                {% endfor %}
+                            </ul>
+
+                        </div>
+
+                    </details>
+
+                {% endif %}
+
+
                 <div class="feedback-section">
 
                     <span class="feedback-label">
                         Was this recommendation helpful?
                     </span>
 
+
                     <div class="feedback-buttons">
+
+                        <!-- Helpful -->
 
                         <form
                             method="POST"
                             action="{{ url_for('recommendation_feedback') }}"
                         >
+
                             <input
                                 type="hidden"
                                 name="recommendation_id"
@@ -263,12 +288,17 @@
                             >
                                 ✓ Helpful
                             </button>
+
                         </form>
+
+
+                        <!-- Not Helpful -->
 
                         <form
                             method="POST"
                             action="{{ url_for('recommendation_feedback') }}"
                         >
+
                             <input
                                 type="hidden"
                                 name="recommendation_id"
@@ -287,15 +317,20 @@
                             >
                                 ✕ Not Helpful
                             </button>
+
                         </form>
 
                     </div>
+
+
+                    <!-- Rating -->
 
                     <div class="rating-section">
 
                         <span class="feedback-label">
                             Rate this recommendation
                         </span>
+
 
                         <form
                             method="POST"
@@ -310,15 +345,19 @@
                             >
 
                             <select name="rating" required>
+
                                 <option value="">
                                     Select rating
                                 </option>
+
                                 <option value="1">1 ★</option>
                                 <option value="2">2 ★</option>
                                 <option value="3">3 ★</option>
                                 <option value="4">4 ★</option>
                                 <option value="5">5 ★</option>
+
                             </select>
+
 
                             <button
                                 type="submit"
@@ -336,6 +375,7 @@
             </div>
 
         {% endfor %}
+
 
     {% else %}
 

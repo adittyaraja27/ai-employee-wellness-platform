@@ -1,7 +1,7 @@
 from recommendation.content import WELLNESS_CONTENT
 from recommendation.semantic_matcher import SemanticMatcher
 from recommendation.feedback import RecommendationFeedback
-
+from recommendation.explainability import generate_explanation
 
 SEMANTIC_WEIGHT = 3
 FEEDBACK_WEIGHT = 1
@@ -104,6 +104,13 @@ class HybridRecommendationEngine:
 
             if score_breakdown["final_score"] > 0:
 
+                explanation = generate_explanation(
+                    content=content,
+                    primary_emotion=primary_emotion,
+                    intensity=intensity,
+                    score_breakdown=score_breakdown
+                )
+                
                 recommendations.append({
                     "content": content,
                     "score": round(
@@ -114,7 +121,8 @@ class HybridRecommendationEngine:
                         similarity,
                         4
                     ),
-                    "score_breakdown": score_breakdown
+                    "score_breakdown": score_breakdown,
+                    "explanation": explanation
                 })
 
         recommendations.sort(
