@@ -623,7 +623,6 @@ st.markdown("---")
 st.markdown(
     "## 📝 Recommendation History"
 )
-
 recommendation_history = (
     history.get_recommendation_history()
 )
@@ -637,9 +636,61 @@ if not recommendation_history:
 
 else:
 
-    for record in reversed(
-        recommendation_history
-    ):
+    # ==================================================
+    # Search and Filters
+    # ==================================================
+
+    filter_col1, filter_col2, filter_col3 = st.columns(3)
+
+    with filter_col1:
+
+        search_text = st.text_input(
+            "🔎 Search recommendation",
+            placeholder="e.g. breathing_01"
+        )
+
+    with filter_col2:
+
+        feedback_filter = st.selectbox(
+            "Feedback",
+            [
+                "All",
+                "Helpful",
+                "Not Helpful",
+                "No Feedback"
+            ]
+        )
+
+    with filter_col3:
+
+        rating_filter = st.selectbox(
+            "Rating",
+            [
+                "All",
+                "1 ⭐",
+                "2 ⭐",
+                "3 ⭐",
+                "4 ⭐",
+                "5 ⭐"
+            ]
+        )
+
+    viewed_filter = st.selectbox(
+        "Viewed",
+        [
+            "All",
+            "Viewed",
+            "Not Viewed"
+        ]
+    )
+
+    # ==================================================
+    # Apply Filters
+    # ==================================================
+
+    filtered_history = []
+
+    for record in recommendation_history:
 
         recommendation_id = (
             record["recommendation_id"]
@@ -649,47 +700,125 @@ else:
         accepted = record["accepted"]
         rejected = record["rejected"]
         rating = record["rating"]
-        timestamp = record["timestamp"]
 
-        with st.container(border=True):
+        # Search filter
+        if (
+            search_text.strip()
+            and search_text.lower()
+            not in recommendation_id.lower()
+        ):
+            continue
 
-            st.write(
-                f"**Recommendation:** "
-                f"`{recommendation_id}`"
+        # Feedback filter
+        if feedback_filter == "Helpful":
+            if accepted is not True:
+                continue
+
+        elif feedback_filter == "Not Helpful":
+            if rejected is not True:
+                continue
+
+        elif feedback_filter == "No Feedback":
+            if accepted is not None or rejected:
+                continue
+
+        # Rating filter
+        if rating_filter != "All":
+
+            selected_rating = int(
+                rating_filter[0]
             )
 
-            st.write(
-                f"**Time:** {timestamp}"
+            if rating != selected_rating:
+                continue
+
+        # Viewed filter
+        if viewed_filter == "Viewed":
+            if viewed is not True:
+                continue
+
+        elif viewed_filter == "Not Viewed":
+            if viewed is not False:
+                continue
+
+        filtered_history.append(record)
+
+    # ==================================================
+    # Filter Summary
+    # ==================================================
+
+    st.caption(
+        f"Showing {len(filtered_history)} "
+        f"of {len(recommendation_history)} "
+        f"recommendation records."
+    )
+
+    # ==================================================
+    # Display Filtered History
+    # ==================================================
+
+    if not filtered_history:
+
+        st.info(
+            "No recommendation history matches "
+            "the selected filters."
+        )
+
+    else:
+
+        for record in reversed(
+            filtered_history
+        ):
+
+            recommendation_id = (
+                record["recommendation_id"]
             )
 
-            if accepted is True:
+            viewed = record["viewed"]
+            accepted = record["accepted"]
+            rejected = record["rejected"]
+            rating = record["rating"]
+            timestamp = record["timestamp"]
+
+            with st.container(border=True):
 
                 st.write(
-                    "**Feedback:** 👍 Helpful"
+                    f"**Recommendation:** "
+                    f"`{recommendation_id}`"
                 )
-
-            elif rejected is True:
 
                 st.write(
-                    "**Feedback:** 👎 Not Helpful"
+                    f"**Time:** {timestamp}"
                 )
 
-            else:
+                if accepted is True:
+
+                    st.write(
+                        "**Feedback:** 👍 Helpful"
+                    )
+
+                elif rejected is True:
+
+                    st.write(
+                        "**Feedback:** 👎 Not Helpful"
+                    )
+
+                else:
+
+                    st.write(
+                        "**Feedback:** "
+                        "No decision recorded"
+                    )
+
+                if rating is not None:
+
+                    st.write(
+                        f"**Rating:** "
+                        f"{'⭐' * rating} "
+                        f"({rating}/5)"
+                    )
 
                 st.write(
-                    "**Feedback:** "
-                    "No decision recorded"
+                    f"**Viewed:** "
+                    f"{'Yes' if viewed else 'No'}"
                 )
-
-            if rating is not None:
-
-                st.write(
-                    f"**Rating:** "
-                    f"{'⭐' * rating} "
-                    f"({rating}/5)"
-                )
-
-            st.write(
-                f"**Viewed:** "
-                f"{'Yes' if viewed else 'No'}"
-            )
