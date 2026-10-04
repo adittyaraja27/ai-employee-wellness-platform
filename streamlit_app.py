@@ -251,3 +251,111 @@ else:
                     for emotion, score in emotions.items()
                 )
             )
+# --------------------------------------------------
+# Emotional Trend Analysis
+# --------------------------------------------------
+
+from recommendation.trend_analyzer import analyze_emotional_trends
+
+
+st.markdown("---")
+
+st.markdown("## 📈 Emotional Trends")
+
+emotional_history = history.get_emotional_history()
+
+if len(emotional_history) < 2:
+
+    st.info(
+        "Analyze at least two moods to view emotional trends."
+    )
+
+else:
+
+    trend_data = analyze_emotional_trends(
+        emotional_history
+    )
+
+    # ----------------------------------------------
+    # Trend summary
+    # ----------------------------------------------
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(
+            "Total Analyses",
+            trend_data["total_analyses"]
+        )
+
+    with col2:
+        dominant = trend_data["dominant_emotion"]
+
+        st.metric(
+            "Dominant Emotion",
+            dominant.capitalize()
+            if dominant
+            else "N/A"
+        )
+
+    with col3:
+        emotion_count = len(
+            trend_data["emotion_frequency"]
+        )
+
+        st.metric(
+            "Emotions Detected",
+            emotion_count
+        )
+
+    # ----------------------------------------------
+    # Emotion frequency
+    # ----------------------------------------------
+
+    st.markdown("### Emotion Frequency")
+
+    frequency = trend_data["emotion_frequency"]
+
+    if frequency:
+
+        st.bar_chart(frequency)
+
+    # ----------------------------------------------
+    # Average intensity
+    # ----------------------------------------------
+
+    st.markdown("### Average Emotional Intensity")
+
+    average_intensity = trend_data["average_intensity"]
+
+    if average_intensity:
+
+        st.bar_chart(average_intensity)
+
+    # ----------------------------------------------
+    # Trend direction
+    # ----------------------------------------------
+
+    st.markdown("### Trend Direction")
+
+    trend_direction = trend_data["trend_direction"]
+
+    for emotion, direction in sorted(
+        trend_direction.items()
+    ):
+
+        if direction == "Increasing":
+            icon = "📈"
+
+        elif direction == "Decreasing":
+            icon = "📉"
+
+        elif direction == "Stable":
+            icon = "➡️"
+
+        else:
+            icon = "⚪"
+
+        st.write(
+            f"{icon} **{emotion.capitalize()}** — {direction}"
+        )
