@@ -3,11 +3,12 @@ import streamlit as st
 from integration.mood_mentor_pipeline import MoodMentorPipeline
 from user.history import UserHistory
 from recommendation.hybrid import HybridRecommendationEngine
+from recommendation.trend_analyzer import analyze_emotional_trends
 
 
-# --------------------------------------------------
-# Page configuration
-# --------------------------------------------------
+# ==================================================
+# Page Configuration
+# ==================================================
 
 st.set_page_config(
     page_title="Mood Mentor",
@@ -16,9 +17,9 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
-# Initialize application components
-# --------------------------------------------------
+# ==================================================
+# Application Components
+# ==================================================
 
 @st.cache_resource
 def load_pipeline():
@@ -34,58 +35,85 @@ def load_history():
 def load_recommendation_engine(_history):
     return HybridRecommendationEngine(_history)
 
-
 pipeline = load_pipeline()
 history = load_history()
 recommendation_engine = load_recommendation_engine(history)
 
 
-# --------------------------------------------------
-# Page header
-# --------------------------------------------------
+# ==================================================
+# Session State
+# ==================================================
+
+if "latest_result" not in st.session_state:
+    st.session_state.latest_result = None
+
+if "latest_recommendations" not in st.session_state:
+    st.session_state.latest_recommendations = []
+
+
+# ==================================================
+# Header
+# ==================================================
 
 st.title("🧠 Mood Mentor")
-st.subheader("AI-Based Employee Wellness Management Platform")
+
+st.subheader(
+    "AI-Based Employee Wellness Management Platform"
+)
 
 st.write(
-    "Describe how you are feeling, and Mood Mentor will analyze "
-    "your emotional state and provide personalized wellness recommendations."
+    "Describe how you are feeling, and Mood Mentor will "
+    "analyze your emotional state and provide personalized "
+    "wellness recommendations."
 )
 
 
-# --------------------------------------------------
-# Mood input
-# --------------------------------------------------
+# ==================================================
+# Mood Input
+# ==================================================
 
 st.markdown("### How are you feeling?")
 
 user_text = st.text_area(
     "Write about your current thoughts or feelings:",
-    placeholder="Example: I have been feeling stressed about my workload today...",
+    placeholder=(
+        "Example: I have been feeling stressed "
+        "about my workload today..."
+    ),
     height=150
 )
 
 
-# --------------------------------------------------
-# Analyze button
-# --------------------------------------------------
+# ==================================================
+# Analyze Mood
+# ==================================================
 
 if st.button("Analyze My Mood", type="primary"):
 
     if not user_text.strip():
-        st.warning("Please enter some text before analyzing.")
+        st.warning(
+            "Please enter some text before analyzing."
+        )
         st.stop()
 
     try:
-        # ------------------------------------------
-        # AI analysis
-        # ------------------------------------------
 
-        with st.spinner("Analyzing your emotional state..."):
+        with st.spinner(
+            "Analyzing your emotional state..."
+        ):
+
             result = pipeline.analyze(user_text)
 
+            recommendations = (
+                recommendation_engine.generate_recommendations(
+                    user_text=user_text,
+                    emotion_result=result["emotions"],
+                    intensity_result=result["intensity"]
+                )
+            )
+
         # ------------------------------------------
-        # Store emotional history
+        # Save analysis in history
         # ------------------------------------------
 
         history.add_emotional_record(
@@ -95,201 +123,401 @@ if st.button("Analyze My Mood", type="primary"):
         )
 
         # ------------------------------------------
-        # Generate recommendations
+        # Store latest analysis in session state
         # ------------------------------------------
 
-        recommendations = recommendation_engine.generate_recommendations(
-            user_text=user_text,
-            emotion_result=result["emotions"],
-            intensity_result=result["intensity"]
+        st.session_state.latest_result = result
+        st.session_state.latest_recommendations = (
+            recommendations
         )
 
-        # ------------------------------------------
-        # Analysis results
-        # ------------------------------------------
-
-        st.success("Analysis completed successfully.")
-
-        st.markdown("## 📊 Emotional Analysis")
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric(
-                "Sentiment",
-                result["sentiment"]["sentiment"]
-            )
-
-        with col2:
-            st.metric(
-                "Emotional State",
-                result["emotional_state"]["emotional_state"]
-            )
-
-        with col3:
-            st.metric(
-                "Intensity",
-                result["intensity"]["severity"]
-            )
-
-        # ------------------------------------------
-        # Emotion scores
-        # ------------------------------------------
-
-        st.markdown("### Emotion Scores")
-
-        emotions = result["emotions"]["emotions"]
-
-        for emotion, score in emotions.items():
-            st.write(
-                f"**{emotion.capitalize()}** — {score:.3f}"
-            )
-            st.progress(float(score))
-
-        # ------------------------------------------
-        # Recommendations
-        # ------------------------------------------
-
-        st.markdown("## 💡 Personalized Recommendations")
-
-        if not recommendations:
-            st.info("No recommendations were generated.")
-        else:
-            for index, recommendation in enumerate(
-                recommendations[:5],
-                start=1
-            ):
-
-                content = recommendation["content"]
-
-                with st.container(border=True):
-
-                    st.markdown(
-                        f"### {index}. {content['title']}"
-                    )
-
-                    st.write(content["description"])
-
-                    st.caption(
-                        f"Recommendation score: "
-                        f"{recommendation['score']:.3f}"
-                    )
-
-                    with st.expander("Why was this recommended?"):
-
-                        for reason in recommendation["explanation"]:
-                            st.write(f"• {reason}")
-
-        # ------------------------------------------
-        # Analysis details
-        # ------------------------------------------
-
-        with st.expander("View Analysis Details"):
-
-            st.markdown("**Original Text**")
-            st.write(result["text"])
-
-            st.markdown("**Preprocessed Text**")
-            st.write(result["preprocessed_text"])
-
-            st.markdown("**Primary Emotion**")
-            st.write(result["emotions"]["primary_emotion"])
+        st.success(
+            "Analysis completed successfully."
+        )
 
     except Exception as e:
 
-        st.error("An error occurred during analysis.")
+        st.error(
+            "An error occurred during analysis."
+        )
 
         with st.expander("Technical Details"):
             st.code(str(e))
 
 
-# --------------------------------------------------
-# User history
-# --------------------------------------------------
+# ==================================================
+# Display Latest Analysis
+# ==================================================
+
+result = st.session_state.latest_result
+recommendations = (
+    st.session_state.latest_recommendations
+)
+
+
+if result is not None:
+
+    # ==================================================
+    # Emotional Analysis
+    # ==================================================
+
+    st.markdown("## Emotional Analysis")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "Sentiment",
+            result["sentiment"]["sentiment"]
+        )
+
+    with col2:
+
+        st.metric(
+            "Emotional State",
+            result["emotional_state"]["emotional_state"]
+        )
+
+    with col3:
+
+        st.metric(
+            "Intensity",
+            result["intensity"]["severity"]
+        )
+
+
+    # ==================================================
+    # Emotion Scores
+    # ==================================================
+
+    st.markdown("### Emotion Scores")
+
+    emotions = result["emotions"]["emotions"]
+
+    for emotion, score in emotions.items():
+
+        st.write(
+            f"**{emotion.capitalize()}** — {score:.1%}"
+        )
+
+        st.progress(
+            float(score)
+        )
+
+
+    # ==================================================
+    # Recommendations
+    # ==================================================
+
+    st.markdown(
+        "## 💡 Personalized Recommendations"
+    )
+
+    if not recommendations:
+
+        st.info(
+            "No recommendations were generated."
+        )
+
+    else:
+
+        for index, recommendation in enumerate(
+            recommendations[:5],
+            start=1
+        ):
+
+            content = recommendation["content"]
+
+            with st.container(border=True):
+
+                st.markdown(
+                    f"### {index}. {content['title']}"
+                )
+
+                st.write(
+                    content["description"]
+                )
+
+                st.caption(
+                    f"Recommendation score: "
+                    f"{recommendation['score']:.3f}"
+                )
+
+
+                # ----------------------------------
+                # Explainability
+                # ----------------------------------
+
+                with st.expander(
+                    "Why was this recommended?"
+                ):
+
+                    for reason in recommendation[
+                        "explanation"
+                    ]:
+
+                        st.write(
+                            f"• {reason}"
+                        )
+
+
+                # ----------------------------------
+                # Feedback
+                # ----------------------------------
+
+                st.write(
+                    "**Was this recommendation helpful?**"
+                )
+
+                feedback_col1, feedback_col2 = (
+                    st.columns(2)
+                )
+
+                with feedback_col1:
+
+                    if st.button(
+                        "👍 Helpful",
+                        key=(
+                            f"helpful_"
+                            f"{content['id']}"
+                        )
+                    ):
+
+                        recommendation_engine.feedback.record_feedback(
+                            recommendation_id=content["id"],
+                            viewed=True,
+                            accepted=True,
+                            rejected=False
+                        )
+
+                        st.success(
+                            "Thanks! Your feedback "
+                            "was recorded."
+                        )
+
+                with feedback_col2:
+
+                    if st.button(
+                        "👎 Not Helpful",
+                        key=(
+                            f"not_helpful_"
+                            f"{content['id']}"
+                        )
+                    ):
+
+                        recommendation_engine.feedback.record_feedback(
+                            recommendation_id=content["id"],
+                            viewed=True,
+                            accepted=False,
+                            rejected=True
+                        )
+
+                        st.info(
+                            "Thanks! Your feedback "
+                            "was recorded."
+                        )
+
+
+                # ----------------------------------
+                # Rating
+                # ----------------------------------
+
+                rating = st.selectbox(
+                    "Rate this recommendation",
+                    [1, 2, 3, 4, 5],
+                    index=None,
+                    placeholder=(
+                        "Select a rating"
+                    ),
+                    key=(
+                        f"rating_"
+                        f"{content['id']}"
+                    )
+                )
+
+                if rating is not None:
+
+                    if st.button(
+                        "Submit Rating",
+                        key=(
+                            f"submit_rating_"
+                            f"{content['id']}"
+                        )
+                    ):
+
+                        recommendation_engine.feedback.record_feedback(
+                            recommendation_id=content["id"],
+                            viewed=True,
+                            rating=rating
+                        )
+
+                        st.success(
+                            "Rating recorded."
+                        )
+
+
+    # ==================================================
+    # Analysis Details
+    # ==================================================
+
+    with st.expander(
+        "View Analysis Details"
+    ):
+
+        st.markdown(
+            "**Original Text**"
+        )
+
+        st.write(
+            result["text"]
+        )
+
+        st.markdown(
+            "**Preprocessed Text**"
+        )
+
+        st.write(
+            result["preprocessed_text"]
+        )
+
+        st.markdown(
+            "**Primary Emotion**"
+        )
+
+        st.write(
+            result["emotions"]["primary_emotion"]
+        )
+
+
+# ==================================================
+# Session History
+# ==================================================
 
 st.markdown("---")
 
 st.markdown("## 📜 Session History")
 
-emotional_history = history.get_emotional_history()
+emotional_history = (
+    history.get_emotional_history()
+)
 
 if not emotional_history:
-    st.info("No emotional analysis history yet.")
+
+    st.info(
+        "No emotional analysis history yet."
+    )
+
 else:
 
-    for record in reversed(emotional_history):
+    for record in reversed(
+        emotional_history
+    ):
 
         timestamp = record["timestamp"]
 
-        state = record["emotional_state"]["emotional_state"]
+        state = (
+            record["emotional_state"]
+            ["emotional_state"]
+        )
 
-        intensity = record["intensity"]["severity"]
+        intensity = (
+            record["intensity"]
+            ["severity"]
+        )
 
-        emotions = record["emotions"]["emotions"]
+        emotions = (
+            record["emotions"]
+            ["emotions"]
+        )
 
-        primary_emotion = record["emotions"]["primary_emotion"]
+        primary_emotion = (
+            record["emotions"]
+            ["primary_emotion"]
+        )
 
         with st.container(border=True):
 
-            st.write(f"**Time:** {timestamp}")
+            st.write(
+                f"**Time:** {timestamp}"
+            )
 
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.write(f"**State:** {state}")
+
+                st.write(
+                    f"**State:** {state}"
+                )
 
             with col2:
-                st.write(f"**Primary Emotion:** {primary_emotion}")
+
+                st.write(
+                    f"**Primary Emotion:** "
+                    f"{primary_emotion}"
+                )
 
             with col3:
-                st.write(f"**Intensity:** {intensity}")
+
+                st.write(
+                    f"**Intensity:** {intensity}"
+                )
 
             st.write(
                 "**Emotion Scores:** "
                 + ", ".join(
                     f"{emotion}: {score:.2f}"
-                    for emotion, score in emotions.items()
+                    for emotion, score
+                    in emotions.items()
                 )
             )
-# --------------------------------------------------
+
+
+# ==================================================
 # Emotional Trend Analysis
-# --------------------------------------------------
-
-from recommendation.trend_analyzer import analyze_emotional_trends
-
+# ==================================================
 
 st.markdown("---")
 
 st.markdown("## 📈 Emotional Trends")
 
-emotional_history = history.get_emotional_history()
+emotional_history = (
+    history.get_emotional_history()
+)
 
 if len(emotional_history) < 2:
 
     st.info(
-        "Analyze at least two moods to view emotional trends."
+        "Analyze at least two moods to view "
+        "emotional trends."
     )
 
 else:
 
-    trend_data = analyze_emotional_trends(
-        emotional_history
+    trend_data = (
+        analyze_emotional_trends(
+            emotional_history
+        )
     )
 
     # ----------------------------------------------
-    # Trend summary
+    # Trend Summary
     # ----------------------------------------------
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
+
         st.metric(
             "Total Analyses",
             trend_data["total_analyses"]
         )
 
     with col2:
-        dominant = trend_data["dominant_emotion"]
+
+        dominant = (
+            trend_data["dominant_emotion"]
+        )
 
         st.metric(
             "Dominant Emotion",
@@ -299,6 +527,7 @@ else:
         )
 
     with col3:
+
         emotion_count = len(
             trend_data["emotion_frequency"]
         )
@@ -308,54 +537,159 @@ else:
             emotion_count
         )
 
+
     # ----------------------------------------------
-    # Emotion frequency
+    # Emotion Frequency
     # ----------------------------------------------
 
-    st.markdown("### Emotion Frequency")
+    st.markdown(
+        "### Emotion Frequency"
+    )
 
-    frequency = trend_data["emotion_frequency"]
+    frequency = (
+        trend_data["emotion_frequency"]
+    )
 
     if frequency:
 
-        st.bar_chart(frequency)
+        st.bar_chart(
+            frequency
+        )
+
 
     # ----------------------------------------------
-    # Average intensity
+    # Average Intensity
     # ----------------------------------------------
 
-    st.markdown("### Average Emotional Intensity")
+    st.markdown(
+        "### Average Emotional Intensity"
+    )
 
-    average_intensity = trend_data["average_intensity"]
+    average_intensity = (
+        trend_data["average_intensity"]
+    )
 
     if average_intensity:
 
-        st.bar_chart(average_intensity)
+        st.bar_chart(
+            average_intensity
+        )
+
 
     # ----------------------------------------------
-    # Trend direction
+    # Trend Direction
     # ----------------------------------------------
 
-    st.markdown("### Trend Direction")
+    st.markdown(
+        "### Trend Direction"
+    )
 
-    trend_direction = trend_data["trend_direction"]
+    trend_direction = (
+        trend_data["trend_direction"]
+    )
 
     for emotion, direction in sorted(
         trend_direction.items()
     ):
 
         if direction == "Increasing":
+
             icon = "📈"
 
         elif direction == "Decreasing":
+
             icon = "📉"
 
         elif direction == "Stable":
+
             icon = "➡️"
 
         else:
+
             icon = "⚪"
 
         st.write(
-            f"{icon} **{emotion.capitalize()}** — {direction}"
+            f"{icon} **{emotion.capitalize()}** "
+            f"— {direction}"
         )
+
+
+# ==================================================
+# Recommendation History
+# ==================================================
+
+st.markdown("---")
+
+st.markdown(
+    "## 📝 Recommendation History"
+)
+
+recommendation_history = (
+    history.get_recommendation_history()
+)
+
+if not recommendation_history:
+
+    st.info(
+        "No recommendation feedback has "
+        "been recorded yet."
+    )
+
+else:
+
+    for record in reversed(
+        recommendation_history
+    ):
+
+        recommendation_id = (
+            record["recommendation_id"]
+        )
+
+        viewed = record["viewed"]
+        accepted = record["accepted"]
+        rejected = record["rejected"]
+        rating = record["rating"]
+        timestamp = record["timestamp"]
+
+        with st.container(border=True):
+
+            st.write(
+                f"**Recommendation:** "
+                f"`{recommendation_id}`"
+            )
+
+            st.write(
+                f"**Time:** {timestamp}"
+            )
+
+            if accepted is True:
+
+                st.write(
+                    "**Feedback:** 👍 Helpful"
+                )
+
+            elif rejected is True:
+
+                st.write(
+                    "**Feedback:** 👎 Not Helpful"
+                )
+
+            else:
+
+                st.write(
+                    "**Feedback:** "
+                    "No decision recorded"
+                )
+
+            if rating is not None:
+
+                st.write(
+                    f"**Rating:** "
+                    f"{'⭐' * rating} "
+                    f"({rating}/5)"
+                )
+
+            st.write(
+                f"**Viewed:** "
+                f"{'Yes' if viewed else 'No'}"
+            )
