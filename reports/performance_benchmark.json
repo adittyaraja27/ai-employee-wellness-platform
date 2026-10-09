@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-10-10T00:44:59",
+  "python_version": "3.12.14",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "pytorch_version": "2.14.0",
+  "mps_available": true,
+  "model_path": "models/bert",
+  "model_initialization_seconds": 0.6447661659913138,
+  "warmup_runs_per_input": 2,
+  "benchmark_runs_per_input": 10,
+  "results": {
+    "short": {
+      "runs": 10,
+      "mean_seconds": 0.008726295898668468,
+      "median_seconds": 0.00860181252937764,
+      "min_seconds": 0.008346082991920412,
+      "max_seconds": 0.009355416987091303,
+      "p95_seconds": 0.009355416987091303
+    },
+    "medium": {
+      "runs": 10,
+      "mean_seconds": 0.010176170815248043,
+      "median_seconds": 0.010097395977936685,
+      "min_seconds": 0.00994975003413856,
+      "max_seconds": 0.010605041054077446,
+      "p95_seconds": 0.010605041054077446
+    },
+    "long": {
+      "runs": 10,
+      "mean_seconds": 0.01425524561200291,
+      "median_seconds": 0.014125166519079357,
+      "min_seconds": 0.014036832959391177,
+      "max_seconds": 0.014853875036351383,
+      "p95_seconds": 0.014853875036351383
+    }
+  }
+}

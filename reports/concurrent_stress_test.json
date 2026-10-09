@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-10-10T01:11:57",
+  "requests_per_level": 30,
+  "shared_pipeline_instance": true,
+  "results": {
+    "2": {
+      "workers": 2,
+      "requested": 30,
+      "successful": 30,
+      "failed": 0,
+      "wall_seconds": 1.512,
+      "throughput_requests_per_second": 19.84,
+      "latency_seconds": {
+        "mean": 0.10037900003371761,
+        "median": 0.020909917016979307,
+        "p95": 1.070731666055508,
+        "max": 1.0823055420769379
+      },
+      "errors": []
+    },
+    "4": {
+      "workers": 4,
+      "requested": 30,
+      "successful": 30,
+      "failed": 0,
+      "wall_seconds": 0.3032,
+      "throughput_requests_per_second": 98.95,
+      "latency_seconds": {
+        "mean": 0.03827629173950602,
+        "median": 0.03957052098121494,
+        "p95": 0.06920787505805492,
+        "max": 0.07127316703554243
+      },
+      "errors": []
+    },
+    "8": {
+      "workers": 8,
+      "requested": 30,
+      "successful": 30,
+      "failed": 0,
+      "wall_seconds": 0.3135,
+      "throughput_requests_per_second": 95.69,
+      "latency_seconds": {
+        "mean": 0.07380582359231387,
+        "median": 0.0819856669404544,
+        "p95": 0.08874454197939485,
+        "max": 0.08905766590032727
+      },
+      "errors": []
+    }
+  }
+}

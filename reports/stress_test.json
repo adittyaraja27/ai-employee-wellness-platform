@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-10-10T00:53:26",
+  "total_requests": 50,
+  "successful_requests": 50,
+  "errors": [],
+  "latency_seconds": {
+    "mean": 0.009727950864471495,
+    "median": 0.009612083551473916,
+    "p95": 0.011648999992758036,
+    "max": 0.01450745901092887
+  },
+  "same_input_consistency": {
+    "expected_primary_emotion": "joy",
+    "expected_emotional_state": "Positive emotional state",
+    "matching_results": 17,
+    "total_comparisons": 17
+  },
+  "invalid_input_checks": [
+    {
+      "input": "''",
+      "rejected": true
+    },
+    {
+      "input": "'   '",
+      "rejected": true
+    },
+    {
+      "input": "'\\n\\t'",
+      "rejected": true
+    }
+  ],
+  "peak_process_rss_mb": 719.91,
+  "initial_process_peak_rss_mb": 717.67
+}
