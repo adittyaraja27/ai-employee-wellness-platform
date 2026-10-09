@@ -4,7 +4,10 @@ from integration.mood_mentor_pipeline import MoodMentorPipeline
 from user.history import UserHistory
 from recommendation.hybrid import HybridRecommendationEngine
 from recommendation.trend_analyzer import analyze_emotional_trends
-
+from reports.wellness_report import (
+    generate_wellness_report,
+    generate_recommendation_csv
+)
 
 # ==================================================
 # Page Configuration
@@ -822,3 +825,54 @@ else:
                     f"**Viewed:** "
                     f"{'Yes' if viewed else 'No'}"
                 )
+
+# ==================================================
+# Report Generation and Export
+# ==================================================
+
+st.markdown("---")
+st.header("📄 Report Generation & Export")
+
+emotional_history = history.get_emotional_history()
+recommendation_history = history.get_recommendation_history()
+
+if not emotional_history:
+    st.info(
+        "Complete an emotional analysis to generate "
+        "your wellness report."
+    )
+else:
+    report_trend_data = analyze_emotional_trends(
+        emotional_history
+    )
+
+    wellness_report = generate_wellness_report(
+        emotional_history=emotional_history,
+        recommendation_history=recommendation_history,
+        trend_data=report_trend_data
+    )
+
+    st.download_button(
+        label="📥 Download Wellness Report",
+        data=wellness_report,
+        file_name="mood_mentor_wellness_report.md",
+        mime="text/markdown",
+        key="download_wellness_report"
+    )
+
+    recommendation_csv = generate_recommendation_csv(
+        recommendation_history
+    )
+
+    st.download_button(
+        label="📊 Download Recommendation History (CSV)",
+        data=recommendation_csv,
+        file_name="mood_mentor_recommendation_history.csv",
+        mime="text/csv",
+        key="download_recommendation_history"
+    )
+
+    st.caption(
+        "The wellness report excludes original mood text. "
+        "The CSV contains recommendation interactions and feedback."
+    )
