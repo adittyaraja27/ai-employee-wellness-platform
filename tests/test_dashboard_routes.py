@@ -213,3 +213,94 @@ def test_missing_recommendation_id_redirects_without_recording_feedback(
 
     assert response.status_code == 302
     dashboard_client["engine"].feedback.record_feedback.assert_not_called()
+
+
+
+
+def test_oversized_mood_entry_is_rejected(dashboard_client):
+    response = dashboard_client["client"].post(
+        "/",
+        data={"mood_text": "a" * 5001},
+    )
+
+    assert response.status_code == 200
+    assert b"5,000 characters" in response.data
+    dashboard_client["pipeline"].analyze.assert_not_called()
+
+
+def test_analysis_error_does_not_expose_exception(dashboard_client):
+    dashboard_client["pipeline"].analyze.side_effect = RuntimeError(
+        "sensitive internal database detail"
+    )
+
+    response = dashboard_client["client"].post(
+        "/",
+        data={"mood_text": "I feel stressed today."},
+    )
+
+    assert response.status_code == 200
+    assert b"Please try again." in response.data
+    assert b"sensitive internal database detail" not in response.data
+
+
+def test_unknown_recommendation_id_is_rejected(dashboard_client):
+    response = dashboard_client["client"].post(
+        "/feedback",
+        data={
+            "recommendation_id": "unknown_999",
+            "feedback_type": "accepted",
+            "rating": "5",
+        },
+    )
+
+    assert response.status_code == 302
+    dashboard_client["engine"].feedback.record_feedback.assert_not_called()
+
+
+def test_invalid_feedback_type_is_rejected(dashboard_client):
+    response = dashboard_client["client"].post(
+        "/feedback",
+        data={
+            "recommendation_id": "gratitude_01",
+            "feedback_type": "something_else",
+            "rating": "5",
+        },
+    )
+
+    assert response.status_code == 302
+    dashboard_client["engine"].feedback.record_feedback.assert_not_called()
+
+
+@pytest.mark.parametrize("rating", ["0", "6", "-1", "abc"])
+def test_invalid_rating_is_rejected(dashboard_client, rating):
+    response = dashboard_client["client"].post(
+        "/feedback",
+        data={
+            "recommendation_id": "gratitude_01",
+            "feedback_type": "accepted",
+            "rating": rating,
+        },
+    )
+
+    assert response.status_code == 302
+    dashboard_client["engine"].feedback.record_feedback.assert_not_called()
+
+
+def test_feedback_without_rating_is_allowed(dashboard_client):
+    response = dashboard_client["client"].post(
+        "/feedback",
+        data={
+            "recommendation_id": "gratitude_01",
+            "feedback_type": "rejected",
+            "rating": "",
+        },
+    )
+
+    assert response.status_code == 302
+    dashboard_client["engine"].feedback.record_feedback.assert_called_once_with(
+        recommendation_id="gratitude_01",
+        viewed=True,
+        accepted=False,
+        rejected=True,
+        rating=None,
+    )

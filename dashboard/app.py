@@ -1,5 +1,3 @@
-import traceback
-
 from flask import Flask, render_template, request, redirect, url_for
 
 from integration.mood_mentor_pipeline import MoodMentorPipeline
@@ -16,7 +14,7 @@ app = Flask(
     static_folder="static",
     static_url_path="/static"
 )
-
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
 pipeline = MoodMentorPipeline()
 history = UserHistory()
 recommendation_engine = HybridRecommendationEngine(history)
@@ -38,6 +36,8 @@ def dashboard():
 
         if not text:
             error = "Please enter some text."
+        elif len(text) > 5000:
+            error = "Please limit your mood entry to 5,000 characters."
 
         else:
             try:
@@ -69,15 +69,14 @@ def dashboard():
                     intensity_result=result["intensity"]
                 )
 
-                # Debug output
-                print("\n=== RECOMMENDATIONS DEBUG ===")
-                print(recommendations)
-                print("============================\n")
+                
 
-            except Exception as e:
-
-                traceback.print_exc()
-                error = str(e)
+            except Exception:
+                app.logger.exception("Mood analysis failed.")
+                error = (
+                    "We couldn't analyze your entry right now. "
+                    "Please try again."
+                )
 
     return render_template(
         "dashboard.html",
@@ -102,16 +101,25 @@ def activity_history():
 
 @app.route("/feedback", methods=["POST"])
 def recommendation_feedback():
+    recommendation_id = request.form.get(
+        "recommendation_id", ""
+    ).strip()
+    feedback_type = request.form.get("feedback_type", "")
+    rating = request.form.get("rating", "").strip()
 
-    recommendation_id = request.form.get("recommendation_id")
-    feedback_type = request.form.get("feedback_type")
-    rating = request.form.get("rating")
+    valid_recommendation_ids = {
+        "breathing_01",
+        "break_01",
+        "journaling_01",
+        "gratitude_01",
+        "walk_01",
+    }
 
-    if not recommendation_id:
+    if recommendation_id not in valid_recommendation_ids:
         return redirect(url_for("dashboard"))
 
-    accepted = feedback_type == "accepted"
-    rejected = feedback_type == "rejected"
+    if feedback_type not in {"accepted", "rejected"}:
+        return redirect(url_for("dashboard"))
 
     rating_value = None
 
@@ -119,48 +127,29 @@ def recommendation_feedback():
         try:
             rating_value = int(rating)
         except ValueError:
-            rating_value = None
+            return redirect(url_for("dashboard"))
+
+        if not 1 <= rating_value <= 5:
+            return redirect(url_for("dashboard"))
+
+    accepted = feedback_type == "accepted"
+    rejected = feedback_type == "rejected"
 
     recommendation_engine.feedback.record_feedback(
         recommendation_id=recommendation_id,
         viewed=True,
         accepted=accepted,
         rejected=rejected,
-        rating=rating_value
+        rating=rating_value,
     )
-
-    print("\n=== FEEDBACK DEBUG ===")
-    print(
-        recommendation_engine.feedback.get_recommendation_feedback(
-            recommendation_id
-        )
-    )
-    print(
-        "Acceptance rate:",
-        recommendation_engine.feedback.calculate_acceptance_rate(
-            recommendation_id
-        )
-    )
-    print(
-        "Average rating:",
-        recommendation_engine.feedback.calculate_average_rating(
-            recommendation_id
-        )
-    )
-    print(
-        "Feedback score:",
-        recommendation_engine.feedback.calculate_feedback_score(
-            recommendation_id
-        )
-    )
-    print("======================\n")
 
     return redirect(url_for("dashboard"))
 
 
+
 if __name__ == "__main__":
     app.run(
-        debug=True,
+        debug=False,
         port=5001
     )
 
