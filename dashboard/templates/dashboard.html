@@ -47,6 +47,12 @@
                     Write what's on your mind or upload your wellness data.
                 </p>
 
+            {% if error %}
+                <div class="error-message" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+            
                 <form method="POST">
 
     <textarea
